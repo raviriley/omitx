@@ -1,8 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import * as React from "react";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 export default function LoginPage() {
   const { data: session } = useSession();
@@ -16,7 +15,6 @@ export default function LoginPage() {
           Your Omi ID is {session.user?.omiId} and your db ID is{" "}
           {session.user?.id}
         </p>
-        <Button onClick={() => signOut()}>Logout</Button>
       </div>
     );
   }
@@ -24,7 +22,6 @@ export default function LoginPage() {
   return (
     <div className="p-4">
       <h1>Welcome to OmiTx</h1>
-      <Button onClick={() => signIn("google")}>Login</Button>
     </div>
   );
 }

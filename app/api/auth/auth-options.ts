@@ -23,7 +23,10 @@ export const authOptions: NextAuthOptions = {
           .upsert({
             username: credentials.username,
             hash: credentials.password,
-            polygon_wallet: "",
+            wallet: {
+              walletId: "",
+              seed: "",
+            },
           })
           .select()
           .single();
@@ -42,6 +45,8 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async session({ session, token }: { session: any; token: any }) {
+      console.log("session", session);
+      console.log("token", token);
       const { data: user } = await supabase
         .from("user")
         .select("*")
@@ -52,7 +57,7 @@ export const authOptions: NextAuthOptions = {
         session.user = {
           id: user.id.toString(),
           omiId: user.omi_id,
-          walletAddress: user.polygon_wallet,
+          wallet: user.wallet,
           username: user.username,
         };
       }
