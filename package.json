@@ -10,7 +10,7 @@
     "format": "prettier --write . --cache --cache-strategy content",
     "typecheck": "tsc --noEmit --pretty --project tsconfig.json && echo '✔ TypeScript compilation passed'",
     "prepare": "husky",
-    "generate:supabase:types": "mkdir -p supabase && pnpx supabase gen types --lang=typescript --project-id \"fgysqwnpfmrlvtufvrcw\" --schema public > supabase/database.types.ts"
+    "generate:supabase:types": "rm -rf supabase && mkdir -p supabase && pnpx supabase gen types --lang=typescript --project-id \"fgysqwnpfmrlvtufvrcw\" --schema public > supabase/database.types.ts"
   },
   "dependencies": {
     "@coinbase/coinbase-sdk": "^0.9.1",

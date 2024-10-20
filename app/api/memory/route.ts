@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import OpenAI from "openai";
 import { SupabaseProvider } from "@/providers/supabase.provider";
+import { Wallet } from "@/providers/coinbase.provider";
 
 const client = new OpenAI({
   baseURL: "https://api.red-pill.ai/v1",
@@ -75,7 +76,23 @@ export async function POST(request: NextRequest) {
 
     const usernamesList = allUsers.map((user) => user.username).join(", ");
 
-    // process each transaction message using openai
+    // Fetch wallet data from Supabase
+    const { data: walletData, error: walletError } = await supabase
+      .from("user")
+      .select("polygon_wallet")
+      .eq("omi_id", uid)
+      .single();
+
+    if (walletError) {
+      throw new Error(`Wallet fetch error: ${walletError.message}`);
+    }
+
+    const walletAddress = walletData?.polygon_wallet;
+
+    // Instantiate the wallet using the Coinbase provider
+    const wallet = Wallet.import(walletAddress);
+
+    // Process each transaction message using OpenAI
     const processed_messages = await Promise.all(
       transaction_messages.map(async (message) => {
         const response = await client.chat.completions.create({
@@ -100,6 +117,20 @@ export async function POST(request: NextRequest) {
         if (!extractedInfo) {
           throw new Error("No transactions detected.");
         }
+
+        // Perform the transaction using the instantiated wallet
+        const transactionResult = await wallet.createTransfer({
+          amount: msg.amount,
+          assetId:
+            msg.currency === "USDC"
+              ? Coinbase.assets.Usdc
+              : Coinbase.assets.Eth,
+          destination: msg.to,
+        });
+
+        // Wait for the transaction to complete
+        await transactionResult.wait();
+
         return JSON.parse(extractedInfo);
       }),
     );
