@@ -5,13 +5,15 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { SupabaseProvider } from "@/providers/supabase.provider";
 import { WalletData } from "@coinbase/coinbase-sdk";
 import Image from "next/image";
+import CopyButton from "@/components/copy-button";
+import { DataTable } from "@/components/data-table/data-table";
+import { columns } from "./columns";
 
 export default async function LoginPage() {
   const session = await getServerSession(authOptions);
@@ -35,6 +37,8 @@ export default async function LoginPage() {
 
     const baseAddress = await baseWallet.getDefaultAddress();
     const baseBalances = await baseAddress.listBalances();
+
+    console.log("baseBalances: ", baseBalances.toString());
 
     const polygonAddress = await polygonWallet.getDefaultAddress();
     const polygonBalances = await polygonAddress.listBalances();
@@ -68,14 +72,45 @@ export default async function LoginPage() {
       },
     };
 
+    const transactionsData = await supabase
+      .from("transaction")
+      .select("*")
+      .eq("from", session.user?.username)
+      .order("timestamp", { ascending: false });
+
+    const transactions = transactionsData.data?.map((transaction) => ({
+      timestamp: new Date(transaction.created_at),
+      hash: transaction.txid || "",
+      to: transaction.to || "",
+      amount: transaction.amount || 0,
+      chain: transaction.chain || "",
+    }));
+
     return (
-      <div className="p-4">
-        <h1>Welcome {session.user?.username}</h1>
-        <p>
-          Your Omi ID is {session.user?.omiId} and your db ID is{" "}
-          {session.user?.id}
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="p-6">
+        <div className="mb-4 flex flex-col md:flex-row justify-between items-center bg-gradient-to-r from-purple-500 to-indigo-600 p-6 rounded-lg shadow-lg">
+          <h1 className="text-3xl font-extrabold text-white mb-4 md:mb-0">
+            Dashboard
+          </h1>
+          <div className="flex flex-col items-end">
+            <p className="text-sm text-indigo-100 font-medium">
+              {session.user?.omiId && (
+                <>
+                  <span className="font-bold">{session.user?.username}</span>
+                  &apos;s Omi ID:{" "}
+                  <span className="bg-indigo-700 px-2 py-1 rounded-md">
+                    {session.user?.omiId}
+                  </span>
+                </>
+              )}
+            </p>
+            <p className="text-xs text-indigo-200 mt-2">
+              Last updated: {new Date().toLocaleString()}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {Object.entries(walletsWithBalances).map(
             async ([chain, { wallet, address, balances }]) => (
               <Card key={chain}>
@@ -84,45 +119,60 @@ export default async function LoginPage() {
                     <Image
                       src={`/${chain.toLowerCase()}-logo.svg`}
                       alt={`${chain} logo`}
-                      className="max-w-6 max-h-6"
-                      width={24}
-                      height={24}
+                      className="max-w-8 max-h-8"
+                      width={32}
+                      height={32}
                     />
                     <CardTitle className="capitalize">{chain}</CardTitle>
                   </div>
-                  <CardDescription>
-                    Wallet and balance information
-                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm font-medium">
+                  <div className="flex flex-col">
                     <span className="font-bold">Address:</span>{" "}
-                    {address.getId()}
-                  </p>
+                    <div className="flex flex-row">
+                      <p className="text-sm font-medium truncate">
+                        {address.getId()}
+                      </p>
+                      <CopyButton
+                        className="ml-2"
+                        value={address.getId()}
+                        toastMessage={`Copied ${chain} address to clipboard`}
+                      />
+                    </div>
+                  </div>
                   <p className="text-sm font-bold mt-1">Balances</p>
                   <ul className="">
-                    {Object.entries(balances).length === 0 ? (
+                    {balances.size === 0 ? (
                       <>
-                        <li className="text-sm">ETH: 0</li>
-                        <li className="text-sm">USDC: 0</li>
+                        <li className="text-sm">
+                          No tokens, fund your wallet to transact
+                        </li>
                       </>
                     ) : (
-                      Object.entries(balances).map(([assetId, balance]) => (
-                        <li key={assetId} className="text-sm">
-                          {balance.asset.symbol}: {balance.amount.toString()}
-                        </li>
-                      ))
+                      Array.from(balances.entries()).map(
+                        ([assetId, balance]) => (
+                          <li key={assetId} className="text-sm">
+                            {balance.toString()} {assetId.toUpperCase()}
+                          </li>
+                        ),
+                      )
                     )}
                   </ul>
                 </CardContent>
-                <CardFooter>
-                  <p className="text-xs text-gray-500">
-                    Last updated: {new Date().toLocaleString()}
-                  </p>
-                </CardFooter>
               </Card>
             ),
           )}
+        </div>
+        <div className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Latest Transactions</CardTitle>
+              <CardDescription>Card Description</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DataTable columns={columns} data={transactions || []} />
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
