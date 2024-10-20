@@ -1,7 +1,8 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import { SupabaseProvider } from "@/providers/supabase.provider";
-import { Coinbase, Wallet } from "@/providers/coinbase.provider";
+import { Wallet } from "@/providers/coinbase.provider";
 import { NextAuthOptions } from "next-auth";
+import { ARBITRUM, BASE, ETHEREUM, POLYGON } from "@/networks";
 
 const supabase = SupabaseProvider.supabase;
 
@@ -20,19 +21,16 @@ export const authOptions: NextAuthOptions = {
         }
 
         const newBaseWallet = await Wallet.create({
-          networkId: Coinbase.networks.BaseMainnet,
-        });
-        const newSolanaWallet = await Wallet.create({
-          networkId: Coinbase.networks.SolanaMainnet,
+          networkId: BASE,
         });
         const newPolygonWallet = await Wallet.create({
-          networkId: Coinbase.networks.PolygonMainnet,
+          networkId: POLYGON,
         });
         const newArbitrumWallet = await Wallet.create({
-          networkId: Coinbase.networks.ArbitrumMainnet,
+          networkId: ARBITRUM,
         });
         const newEthereumWallet = await Wallet.create({
-          networkId: Coinbase.networks.EthereumMainnet,
+          networkId: ETHEREUM,
         });
 
         const { data: user, error } = await supabase
@@ -41,7 +39,6 @@ export const authOptions: NextAuthOptions = {
             username: credentials.username,
             hash: credentials.password,
             base_wallet: newBaseWallet.export(),
-            sol_wallet: newSolanaWallet.export(),
             polygon_wallet: newPolygonWallet.export(),
             arbitrum_wallet: newArbitrumWallet.export(),
             eth_wallet: newEthereumWallet.export(),
