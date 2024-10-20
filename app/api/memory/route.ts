@@ -242,16 +242,17 @@ export async function POST(request: NextRequest) {
       } else {
         // Log the transaction in the Supabase database
         console.log("adding tx to database");
-        await supabase.from("transaction").insert({
+        const { error: txError } = await supabase.from("transaction").insert({
           amount: msg.amount,
           currrency: msg.currency,
           device_uid: uid,
           from: fromUsername,
           to: msg.to,
           transcript: msg.transcript,
-          txid: transactionReceipt.getId(),
-          network: msg.network,
+          txid: transactionReceipt.getTransactionHash(),
+          chain: msg.network,
         });
+        console.log("txError: ", txError);
       }
     }
 
@@ -308,16 +309,17 @@ export async function POST(request: NextRequest) {
         throw new Error("Trade failed."); // Handle trade failure
       } else {
         // Log the trade in the Supabase database
-        await supabase.from("trade").insert({
+        const { error: tradeError } = await supabase.from("trade").insert({
           amount_deposit: swap.amount,
           amount_receive: tradeReceipt.getToAmount().toNumber(),
           device_uid: uid,
           from_currency: swap.fromCurrency,
           to_currency: swap.toCurrency,
           transcript: swap.transcript,
-          txid: tradeReceipt.getId(),
-          network: swap.network,
+          txid: tradeReceipt.getTransaction().getTransactionHash(),
+          chain: swap.network,
         });
+        console.log("tradeError: ", tradeError);
       }
     }
   } catch (error) {
