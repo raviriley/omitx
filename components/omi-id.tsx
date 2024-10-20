@@ -44,7 +44,8 @@ const OmiIdEditor = ({
                 onChange={(e) => setOmiId(e.target.value)}
                 placeholder="Enter your Omi ID"
                 className={cn(
-                  "bg-indigo-700 text-indigo-100 placeholder-indigo-300 border-indigo-600",
+                  "bg-blue-700 text-blue-100 placeholder-blue-300 border-blue-600",
+                  "dark:bg-indigo-700 dark:text-indigo-100 dark:placeholder-indigo-300 dark:border-indigo-600",
                   "focus:border-indigo-500 focus:ring-indigo-500",
                 )}
               />
