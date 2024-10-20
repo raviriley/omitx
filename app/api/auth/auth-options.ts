@@ -52,7 +52,7 @@ export const authOptions: NextAuthOptions = {
         session.user = {
           id: user.id.toString(),
           omiId: user.omi_id,
-          polygonWallet: user.polygon_wallet,
+          walletAddress: user.polygon_wallet,
           username: user.username,
         };
       }

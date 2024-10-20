@@ -9,7 +9,7 @@ declare module "next-auth" {
     user: {
       id: string;
       omiId: string;
-      polygonWallet: string;
+      walletAddress: string;
       username: string;
     };
   }
