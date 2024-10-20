@@ -96,9 +96,11 @@ export default async function LoginPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm font-medium">
-                    Address: {address.getId()}
+                    <span className="font-bold">Address:</span>{" "}
+                    {address.getId()}
                   </p>
-                  <ul className="mt-2">
+                  <p className="text-sm font-bold mt-1">Balances</p>
+                  <ul className="">
                     {Object.entries(balances).length === 0 ? (
                       <>
                         <li className="text-sm">ETH: 0</li>

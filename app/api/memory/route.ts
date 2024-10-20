@@ -80,20 +80,6 @@ export async function POST(request: NextRequest) {
       throw new Error(`User fetch error: ${allUsersError.message}`);
     }
 
-    // Fetch wallet data from Supabase
-    const { data: walletData, error: walletError } = await supabase
-      .from("user")
-      .select("wallet")
-      .eq("omi_id", uid)
-      .single();
-
-    if (walletError) {
-      throw new Error(`Wallet fetch error: ${walletError.message}`);
-    }
-
-    // Instantiate the wallet using the Coinbase provider
-    const fromWallet = await Wallet.import(walletData?.wallet as WalletData);
-
     const { data: userData, error: userError } = await supabase
       .from("user")
       .select("username")
@@ -120,9 +106,8 @@ export async function POST(request: NextRequest) {
                 The user will provide you with a text transcription of a spoken request to create a blockchain transaction on a specific network/chain. 
                 Extract the recipient, amount, currency, and network from the transaction message.
                 Output a structured JSON object with 'to' for the recipient username, 'amount' for the amount, 'currency' for the currency, and 'network' for the network.
-                Use 'USDC' for dollar amounts on any network.
-                Use SOL for Solana, and ETH for all other networks.
-                Available networks are: Base, Solana, Polygon, Arbitrum, Ethereum.
+                Use 'USDC' for dollar amounts on any network, otherwise use 'ETH' for all other networks.
+                Available networks are: base, polygon, arbitrum, ethereum. Enum for 'network' is {base, polygon, arbitrum, eth}
                 Here are the available usernames: ${usernamesList}.
               `,
             },
@@ -141,23 +126,42 @@ export async function POST(request: NextRequest) {
     );
 
     for (const msg of processed_messages) {
-      console.log(
-        `Creating transfer from ${fromUsername} to ${msg.to} for ${msg.amount} ${msg.currency} on ${msg.network}`,
-      );
-
-      const { data: toWalletData, error: toWalletError } = await supabase
+      const { data: userData, error: userDataError } = await supabase
         .from("user")
-        .select("wallet")
+        .select("*")
         .eq("username", msg.to)
         .single();
 
-      if (toWalletError) {
-        throw new Error(`To wallet fetch error: ${toWalletError.message}`);
+      if (userDataError) {
+        throw new Error(`To wallet fetch error: ${userDataError.message}`);
       }
 
+      const chosenNetwork = `${msg.network.toLowerCase()}_wallet`;
+
       const toWallet = await (
-        await Wallet.import(toWalletData?.wallet as WalletData)
+        await Wallet.import(
+          userData[chosenNetwork as keyof typeof userData] as WalletData,
+        )
       ).getDefaultAddress();
+
+      // Fetch sender wallet data from Supabase
+      const { data: senderWalletData, error: senderWalletDataError } =
+        await supabase.from("user").select("*").eq("omi_id", uid).single();
+
+      if (senderWalletDataError) {
+        throw new Error(`Wallet fetch error: ${senderWalletDataError.message}`);
+      }
+
+      // Instantiate the wallet using the Coinbase provider
+      const fromWallet = await Wallet.import(
+        senderWalletData[
+          chosenNetwork as keyof typeof senderWalletData
+        ] as WalletData,
+      );
+
+      console.log(
+        `Creating transfer from ${fromUsername} (${(await fromWallet.getDefaultAddress()).getId()}) to ${msg.to} (${toWallet.getId()}) for ${msg.amount} ${msg.currency} on ${msg.network}`,
+      );
 
       const transaction = await fromWallet.createTransfer({
         amount: msg.amount,
