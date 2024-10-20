@@ -12,7 +12,11 @@ const client = new OpenAI({
 const supabase = SupabaseProvider.supabase;
 
 const START_TRIGGER_PHRASES = ["start transaction", "start transaction."];
-const END_TRIGGER_PHRASES = ["end transaction", "end transaction.", "and transaction"];
+const END_TRIGGER_PHRASES = [
+  "end transaction",
+  "end transaction.",
+  "and transaction",
+];
 
 function extractTxMessages(
   text: string,
@@ -49,6 +53,7 @@ export async function POST(request: NextRequest) {
     if (!uid) {
       throw new Error("User ID (uid) is required.");
     }
+    console.log("Received request for user w uid: ", uid);
     const text = await request.text();
     const data = JSON.parse(text);
 
@@ -74,8 +79,6 @@ export async function POST(request: NextRequest) {
     if (allUsersError) {
       throw new Error(`User fetch error: ${allUsersError.message}`);
     }
-
-    const usernamesList = allUsers.map((user) => user.username).join(", ");
 
     // Fetch wallet data from Supabase
     const { data: walletData, error: walletError } = await supabase
