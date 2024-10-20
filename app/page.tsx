@@ -115,19 +115,8 @@ export default async function LoginPage() {
             Dashboard
           </h1>
           <div className="flex flex-col items-end">
-            {/* <p className="text-sm text-indigo-100 font-medium">
-              {session.user?.omiId && (
-                <>
-                  <span className="font-bold">{session.user?.username}</span>
-                  &apos;s Omi ID:{" "}
-                  <span className="bg-indigo-700 px-2 py-1 rounded-md">
-                    {session.user?.omiId}
-                  </span>
-                </>
-              )}
-            </p> */}
             {session.user?.omiId && (
-              <div className="flex flex-row items-center">
+              <div className="flex flex-row items-center text-white">
                 <span className="font-bold">{session.user?.username}</span>
                 &apos;s Omi ID:{" "}
                 <OmiIdEditor
