@@ -41,10 +41,10 @@ export const authOptions: NextAuthOptions = {
             username: credentials.username,
             hash: credentials.password,
             base_wallet: newBaseWallet.export(),
-            solana_wallet: newSolanaWallet.export(),
+            sol_wallet: newSolanaWallet.export(),
             polygon_wallet: newPolygonWallet.export(),
             arbitrum_wallet: newArbitrumWallet.export(),
-            ethereum_wallet: newEthereumWallet.export(),
+            eth_wallet: newEthereumWallet.export(),
           })
           .select()
           .single();
@@ -73,7 +73,6 @@ export const authOptions: NextAuthOptions = {
         session.user = {
           id: user.id.toString(),
           omiId: user.omi_id,
-          wallet: user.wallet,
           username: user.username,
         };
       }
