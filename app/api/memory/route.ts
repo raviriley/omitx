@@ -155,6 +155,7 @@ export async function POST(request: NextRequest) {
         assetId:
           msg.currency === "USDC" ? Coinbase.assets.Usdc : Coinbase.assets.Eth,
         destination: toWallet,
+        gasless: msg.currency === "USDC",
       });
 
       const transactionReceipt = await transaction.wait();
