@@ -24,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { PrivateKeyDisplay } from "@/components/private-key";
+import OmiIdEditor from "@/components/omi-id";
 
 export default async function LoginPage() {
   const session = await getServerSession(authOptions);
@@ -39,10 +40,10 @@ export default async function LoginPage() {
     const baseWallet = await Wallet.import(data?.base_wallet as WalletData);
 
     const polygonWallet = await Wallet.import(
-      data?.polygon_wallet as WalletData,
+      data?.polygon_wallet as WalletData
     );
     const arbitrumWallet = await Wallet.import(
-      data?.arbitrum_wallet as WalletData,
+      data?.arbitrum_wallet as WalletData
     );
     const ethereumWallet = await Wallet.import(data?.eth_wallet as WalletData);
 
@@ -112,7 +113,7 @@ export default async function LoginPage() {
             Dashboard
           </h1>
           <div className="flex flex-col items-end">
-            <p className="text-sm text-indigo-100 font-medium">
+            {/* <p className="text-sm text-indigo-100 font-medium">
               {session.user?.omiId && (
                 <>
                   <span className="font-bold">{session.user?.username}</span>
@@ -122,7 +123,17 @@ export default async function LoginPage() {
                   </span>
                 </>
               )}
-            </p>
+            </p> */}
+            {session.user?.omiId && (
+              <div className="flex flex-row items-center">
+                <span className="font-bold">{session.user?.username}</span>
+                &apos;s Omi ID:{" "}
+                <OmiIdEditor
+                  className="ml-2"
+                  initialOmiId={session.user?.omiId}
+                />
+              </div>
+            )}
             <p className="text-xs text-indigo-200 mt-2">
               Last updated: {new Date().toLocaleString()}
             </p>
@@ -172,7 +183,7 @@ export default async function LoginPage() {
                             <li key={assetId} className="text-sm">
                               {balance.toString()} {assetId.toUpperCase()}
                             </li>
-                          ),
+                          )
                         )
                       )}
                     </ul>
@@ -212,7 +223,7 @@ export default async function LoginPage() {
                   </div>
                 </CardContent>
               </Card>
-            ),
+            )
           )}
         </div>
         <div className="mt-4">
