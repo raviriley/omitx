@@ -15,7 +15,7 @@ const END_TRIGGER_PHRASES = ["end transaction", "end transaction."];
 function extractTxMessages(
   text: string,
   startPhrases: string[],
-  endPhrases: string[],
+  endPhrases: string[]
 ): string[] {
   const startPattern = startPhrases.join("|");
   const endPattern = endPhrases.join("|");
@@ -44,6 +44,9 @@ export async function POST(request: NextRequest) {
     const reqUrl = request.url;
     const { searchParams } = new URL(reqUrl);
     const uid = searchParams.get("uid");
+    if (!uid) {
+      throw new Error("User ID (uid) is required.");
+    }
     const text = await request.text();
     const data = JSON.parse(text);
 
@@ -55,8 +58,22 @@ export async function POST(request: NextRequest) {
     const transaction_messages = extractTxMessages(
       transcript.toLowerCase(),
       START_TRIGGER_PHRASES,
-      END_TRIGGER_PHRASES,
+      END_TRIGGER_PHRASES
     );
+
+    if (transaction_messages.length === 0) {
+      throw new Error("No transactions detected.");
+    }
+
+    const { data: allUsers, error: allUsersError } = await supabase
+      .from("user")
+      .select("username");
+
+    if (allUsersError) {
+      throw new Error(`User fetch error: ${allUsersError.message}`);
+    }
+
+    const usernamesList = allUsers.map((user) => user.username).join(", ");
 
     // process each transaction message using openai
     const processed_messages = await Promise.all(
@@ -71,6 +88,7 @@ export async function POST(request: NextRequest) {
                 Extract the recipient, amount, and currency from the transaction message. 
                 Output a structured JSON object with 'to' for the recipient username, 'amount' for the amount, and 'currency' for the currency. 
                 Use 'USDC' for dollar amounts, otherwise use ETH.
+                Here are the available usernames: ${usernamesList}.
               `,
             },
             { role: "user", content: message },
@@ -79,14 +97,39 @@ export async function POST(request: NextRequest) {
         });
 
         const extractedInfo = response.choices[0].message.content;
-        return JSON.parse(extractedInfo!);
-      }),
+        if (!extractedInfo) {
+          throw new Error("No transactions detected.");
+        }
+        return JSON.parse(extractedInfo);
+      })
     );
 
-    // Insert processed messages into the database
+    const { data: userData, error: userError } = await supabase
+      .from("user")
+      .select("username")
+      .eq("omi_id", uid)
+      .single();
+
+    if (userError) {
+      throw new Error(`User fetch error: ${userError.message}`);
+    }
+
+    const fromUsername = userData?.username || null;
+
     const { data: insertedData, error } = await supabase
       .from("transaction")
-      .insert(processed_messages);
+      .insert(
+        processed_messages.map((msg) => ({
+          amount: msg.amount,
+          currrency: msg.currency,
+          device_uid: uid,
+          from: fromUsername,
+          id: crypto.randomUUID(),
+          to: msg.to,
+          transcript: transcript,
+          txid: null,
+        }))
+      );
 
     if (error) {
       throw new Error(`Database insert error: ${error.message}`);
@@ -99,7 +142,7 @@ export async function POST(request: NextRequest) {
       `Webhook error: ${error instanceof Error ? error.message : `Unknown error: ${error}`}`,
       {
         status: 400,
-      },
+      }
     );
   }
 
