@@ -39,10 +39,10 @@ export default async function LoginPage() {
     const baseWallet = await Wallet.import(data?.base_wallet as WalletData);
 
     const polygonWallet = await Wallet.import(
-      data?.polygon_wallet as WalletData,
+      data?.polygon_wallet as WalletData
     );
     const arbitrumWallet = await Wallet.import(
-      data?.arbitrum_wallet as WalletData,
+      data?.arbitrum_wallet as WalletData
     );
     const ethereumWallet = await Wallet.import(data?.eth_wallet as WalletData);
 
@@ -91,13 +91,13 @@ export default async function LoginPage() {
       },
     };
 
-    const transactionsData = await supabase
+    const { data: transactionsData } = await supabase
       .from("transaction")
       .select("*")
       .eq("from", session.user?.username)
-      .order("timestamp", { ascending: false });
+      .order("created_at", { ascending: false });
 
-    const transactions = transactionsData.data?.map((transaction) => ({
+    const transactions = transactionsData?.map((transaction) => ({
       timestamp: new Date(transaction.created_at),
       hash: transaction.txid || "",
       to: transaction.to || "",
@@ -154,8 +154,8 @@ export default async function LoginPage() {
                       </p>
                       <CopyButton
                         className="ml-2"
-                        value={addresses[chain].getId()}
-                        toastMessage={`Copied ${chain} address to clipboard`}
+                        value={address.getId()}
+                        toastMessage={`copied ${chain.charAt(0).toUpperCase() + chain.slice(1)} address to clipboard`}
                       />
                     </div>
                     <p className="font-bold mt-2">Balances</p>
@@ -172,7 +172,7 @@ export default async function LoginPage() {
                             <li key={assetId} className="text-sm">
                               {balance.toString()} {assetId.toUpperCase()}
                             </li>
-                          ),
+                          )
                         )
                       )}
                     </ul>
@@ -212,7 +212,7 @@ export default async function LoginPage() {
                   </div>
                 </CardContent>
               </Card>
-            ),
+            )
           )}
         </div>
         <div className="mt-4">
