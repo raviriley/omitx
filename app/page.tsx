@@ -9,11 +9,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { SupabaseProvider } from "@/providers/supabase.provider";
-import { WalletData } from "@coinbase/coinbase-sdk";
+import { WalletAddress, WalletData } from "@coinbase/coinbase-sdk";
 import Image from "next/image";
 import CopyButton from "@/components/copy-button";
 import { DataTable } from "@/components/data-table/data-table";
 import { columns } from "./columns";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Upload } from "lucide-react";
+import { PrivateKeyDisplay } from "@/components/private-key";
 
 export default async function LoginPage() {
   const session = await getServerSession(authOptions);
@@ -27,24 +37,35 @@ export default async function LoginPage() {
       .single();
 
     const baseWallet = await Wallet.import(data?.base_wallet as WalletData);
+
     const polygonWallet = await Wallet.import(
-      data?.polygon_wallet as WalletData,
+      data?.polygon_wallet as WalletData
     );
     const arbitrumWallet = await Wallet.import(
-      data?.arbitrum_wallet as WalletData,
+      data?.arbitrum_wallet as WalletData
     );
     const ethereumWallet = await Wallet.import(data?.eth_wallet as WalletData);
 
+    // Fetch default addresses for all wallets outside of the return
     const baseAddress = await baseWallet.getDefaultAddress();
+    const polygonAddress = await polygonWallet.getDefaultAddress();
+    const arbitrumAddress = await arbitrumWallet.getDefaultAddress();
+    const ethereumAddress = await ethereumWallet.getDefaultAddress();
+
+    // Store addresses in an object for easy access
+    const addresses: Record<string, WalletAddress> = {
+      base: baseAddress,
+      polygon: polygonAddress,
+      arbitrum: arbitrumAddress,
+      ethereum: ethereumAddress,
+    };
+
     const baseBalances = await baseAddress.listBalances();
 
-    const polygonAddress = await polygonWallet.getDefaultAddress();
     const polygonBalances = await polygonAddress.listBalances();
 
-    const arbitrumAddress = await arbitrumWallet.getDefaultAddress();
     const arbitrumBalances = await arbitrumAddress.listBalances();
 
-    const ethereumAddress = await ethereumWallet.getDefaultAddress();
     const ethereumBalances = await ethereumAddress.listBalances();
 
     const walletsWithBalances = {
@@ -110,7 +131,7 @@ export default async function LoginPage() {
 
         <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {Object.entries(walletsWithBalances).map(
-            async ([chain, { wallet, address, balances }]) => (
+            async ([chain, { wallet, balances }]) => (
               <Card key={chain}>
                 <CardHeader>
                   <div className="flex items-center space-x-2">
@@ -129,36 +150,69 @@ export default async function LoginPage() {
                     <span className="font-bold">Address:</span>{" "}
                     <div className="flex flex-row">
                       <p className="text-sm font-medium truncate">
-                        {address.getId()}
+                        {addresses[chain].getId()}{" "}
                       </p>
                       <CopyButton
                         className="ml-2"
-                        value={address.getId()}
+                        value={addresses[chain].getId()}
                         toastMessage={`Copied ${chain} address to clipboard`}
                       />
                     </div>
-                  </div>
-                  <p className="text-sm font-bold mt-1">Balances</p>
-                  <ul className="">
-                    {balances.size === 0 ? (
-                      <>
-                        <li className="text-sm">
-                          No tokens, fund your wallet to transact
-                        </li>
-                      </>
-                    ) : (
-                      Array.from(balances.entries()).map(
-                        ([assetId, balance]) => (
-                          <li key={assetId} className="text-sm">
-                            {balance.toString()} {assetId.toUpperCase()}
+                    <p className="font-bold mt-2">Balances</p>
+                    <ul className="">
+                      {balances.size === 0 ? (
+                        <>
+                          <li className="text-sm">
+                            No tokens, fund your wallet to transact
                           </li>
-                        ),
-                      )
-                    )}
-                  </ul>
+                        </>
+                      ) : (
+                        Array.from(balances.entries()).map(
+                          ([assetId, balance]) => (
+                            <li key={assetId} className="text-sm">
+                              {balance.toString()} {assetId.toUpperCase()}
+                            </li>
+                          )
+                        )
+                      )}
+                    </ul>
+                    <div className="flex flex-row">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="mt-12">
+                            <Upload className="mr-2 h-4 w-4" />
+                            Export Private Key
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>
+                              {chain.charAt(0).toUpperCase() + chain.slice(1)}{" "}
+                              Private Key
+                            </DialogTitle>
+                          </DialogHeader>
+                          <div className="mt-2">
+                            <PrivateKeyDisplay
+                              privateKey={(
+                                await wallet.getDefaultAddress()
+                              ).export()}
+                            />
+                          </div>
+                          <div className="flex justify-end mt-4">
+                            <CopyButton
+                              value={(
+                                await wallet.getDefaultAddress()
+                              ).export()}
+                              toastMessage={`Copied ${chain} address to clipboard`}
+                            />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
-            ),
+            )
           )}
         </div>
         <div className="mt-4">
