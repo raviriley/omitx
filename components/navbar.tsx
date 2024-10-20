@@ -9,7 +9,7 @@ import { AuthButton } from "./auth-button";
 
 const navigation = [
   { href: "/", label: "Home" },
-  { href: "/", label: "Home" },
+  { href: "/api/auth/signin", label: "Sign In" },
 ];
 
 const linkClasses = "text-foreground transition-colors hover:text-foreground";
