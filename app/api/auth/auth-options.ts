@@ -20,39 +20,61 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const newBaseWallet = await Wallet.create({
-          networkId: BASE,
-        });
-        const newPolygonWallet = await Wallet.create({
-          networkId: POLYGON,
-        });
-        const newArbitrumWallet = await Wallet.create({
-          networkId: ARBITRUM,
-        });
-        const newEthereumWallet = await Wallet.create({
-          networkId: ETHEREUM,
-        });
-
-        const { data: user, error } = await supabase
+        // Check if the user already exists
+        const { data: existingUser, error: fetchError } = await supabase
           .from("user")
-          .upsert({
-            username: credentials.username,
-            hash: credentials.password,
-            base_wallet: newBaseWallet.export(),
-            polygon_wallet: newPolygonWallet.export(),
-            arbitrum_wallet: newArbitrumWallet.export(),
-            eth_wallet: newEthereumWallet.export(),
-          })
-          .select()
+          .select("*")
+          .eq("username", credentials.username)
           .single();
 
-        if (error || !user) {
+        if (fetchError && fetchError.code !== "PGRST116") {
+          console.error("Error fetching user:", fetchError);
           return null;
         }
 
-        return {
-          id: user.id.toString(),
-        };
+        if (existingUser) {
+          // User exists, verify password
+          if (existingUser.hash === credentials.password) {
+            return {
+              id: existingUser.id.toString(),
+            };
+          } else {
+            // Password doesn't match
+            return null;
+          }
+        } else {
+          // User doesn't exist, create new user with wallets
+          const newBaseWallet = await Wallet.create({ networkId: BASE });
+          const newPolygonWallet = await Wallet.create({ networkId: POLYGON });
+          const newArbitrumWallet = await Wallet.create({
+            networkId: ARBITRUM,
+          });
+          const newEthereumWallet = await Wallet.create({
+            networkId: ETHEREUM,
+          });
+
+          const { data: newUser, error: insertError } = await supabase
+            .from("user")
+            .insert({
+              username: credentials.username,
+              hash: credentials.password,
+              base_wallet: newBaseWallet.export(),
+              polygon_wallet: newPolygonWallet.export(),
+              arbitrum_wallet: newArbitrumWallet.export(),
+              eth_wallet: newEthereumWallet.export(),
+            })
+            .select()
+            .single();
+
+          if (insertError || !newUser) {
+            console.error("Error creating new user:", insertError);
+            return null;
+          }
+
+          return {
+            id: newUser.id.toString(),
+          };
+        }
       },
     }),
   ],
