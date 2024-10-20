@@ -13,6 +13,7 @@ export type Database = {
         Row: {
           amount_deposit: number | null;
           amount_receive: number | null;
+          chain: string | null;
           created_at: string;
           device_uid: string | null;
           from_currency: string | null;
@@ -24,6 +25,7 @@ export type Database = {
         Insert: {
           amount_deposit?: number | null;
           amount_receive?: number | null;
+          chain?: string | null;
           created_at?: string;
           device_uid?: string | null;
           from_currency?: string | null;
@@ -35,6 +37,7 @@ export type Database = {
         Update: {
           amount_deposit?: number | null;
           amount_receive?: number | null;
+          chain?: string | null;
           created_at?: string;
           device_uid?: string | null;
           from_currency?: string | null;
@@ -56,6 +59,7 @@ export type Database = {
       transaction: {
         Row: {
           amount: number | null;
+          chain: string | null;
           created_at: string;
           currrency: string | null;
           device_uid: string | null;
@@ -67,6 +71,7 @@ export type Database = {
         };
         Insert: {
           amount?: number | null;
+          chain?: string | null;
           created_at?: string;
           currrency?: string | null;
           device_uid?: string | null;
@@ -78,6 +83,7 @@ export type Database = {
         };
         Update: {
           amount?: number | null;
+          chain?: string | null;
           created_at?: string;
           currrency?: string | null;
           device_uid?: string | null;

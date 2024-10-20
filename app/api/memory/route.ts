@@ -29,7 +29,7 @@ const SWAP_END_TRIGGER_PHRASES = ["end swap", "end swap."];
 function extractTxMessages(
   text: string,
   startPhrases: string[],
-  endPhrases: string[],
+  endPhrases: string[]
 ): string[] {
   const startPattern = startPhrases.join("|");
   const endPattern = endPhrases.join("|");
@@ -53,7 +53,7 @@ function extractTxMessages(
 function extractSwapMessages(
   text: string,
   startPhrases: string[],
-  endPhrases: string[],
+  endPhrases: string[]
 ): string[] {
   const startPattern = startPhrases.join("|");
   const endPattern = endPhrases.join("|");
@@ -93,13 +93,13 @@ export async function POST(request: NextRequest) {
     const transaction_messages = extractTxMessages(
       transcript.toLowerCase(),
       START_TRIGGER_PHRASES,
-      END_TRIGGER_PHRASES,
+      END_TRIGGER_PHRASES
     );
 
     const swap_messages = extractSwapMessages(
       transcript.toLowerCase(),
       SWAP_START_TRIGGER_PHRASES,
-      SWAP_END_TRIGGER_PHRASES,
+      SWAP_END_TRIGGER_PHRASES
     );
 
     if (transaction_messages.length === 0 && swap_messages.length === 0) {
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
         }
 
         return { ...JSON.parse(extractedInfo), transcript: message };
-      }),
+      })
     );
 
     // Handle the processed swaps
@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
         }
 
         return { ...JSON.parse(extractedInfo), transcript: message };
-      }),
+      })
     );
 
     for (const msg of processed_messages) {
@@ -202,7 +202,7 @@ export async function POST(request: NextRequest) {
 
       const toWallet = await (
         await Wallet.import(
-          userData[chosenNetwork as keyof typeof userData] as WalletData,
+          userData[chosenNetwork as keyof typeof userData] as WalletData
         )
       ).getDefaultAddress();
 
@@ -218,11 +218,11 @@ export async function POST(request: NextRequest) {
       const fromWallet = await Wallet.import(
         senderWalletData[
           chosenNetwork as keyof typeof senderWalletData
-        ] as WalletData,
+        ] as WalletData
       );
 
       console.log(
-        `Creating transfer from ${fromUsername} (${(await fromWallet.getDefaultAddress()).getId()}) to ${msg.to} (${toWallet.getId()}) for ${msg.amount} ${msg.currency} on ${msg.network}`,
+        `Creating transfer from ${fromUsername} (${(await fromWallet.getDefaultAddress()).getId()}) to ${msg.to} (${toWallet.getId()}) for ${msg.amount} ${msg.currency} on ${msg.network}`
       );
 
       const transaction = await fromWallet.createTransfer({
@@ -245,6 +245,7 @@ export async function POST(request: NextRequest) {
           to: msg.to,
           transcript: msg.transcript,
           txid: transactionReceipt.getId(),
+          network: msg.network,
         });
       }
     }
@@ -259,7 +260,7 @@ export async function POST(request: NextRequest) {
         swap.toCurrency === "USDC" ? Coinbase.assets.Usdc : Coinbase.assets.Eth;
 
       console.log(
-        `Creating trade from ${swap.fromCurrency} to ${swap.toCurrency} for ${swap.amount} on ${swap.network}`,
+        `Creating trade from ${swap.fromCurrency} to ${swap.toCurrency} for ${swap.amount} on ${swap.network}`
       );
 
       // Fetch sender wallet data from Supabase
@@ -276,7 +277,7 @@ export async function POST(request: NextRequest) {
       const fromWallet = await Wallet.import(
         senderWalletData[
           chosenNetwork as keyof typeof senderWalletData
-        ] as WalletData,
+        ] as WalletData
       );
 
       const trade = await fromWallet.createTrade({
@@ -297,6 +298,7 @@ export async function POST(request: NextRequest) {
           to_currency: swap.toCurrency,
           transcript: swap.transcript,
           txid: tradeReceipt.getId(),
+          network: swap.network,
         });
       }
     }
@@ -306,7 +308,7 @@ export async function POST(request: NextRequest) {
       `Webhook error: ${error instanceof Error ? error.message : `Unknown error: ${error}`}`,
       {
         status: 400,
-      },
+      }
     );
   }
 
