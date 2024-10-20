@@ -38,8 +38,6 @@ export default async function LoginPage() {
     const baseAddress = await baseWallet.getDefaultAddress();
     const baseBalances = await baseAddress.listBalances();
 
-    console.log("baseBalances: ", baseBalances.toString());
-
     const polygonAddress = await polygonWallet.getDefaultAddress();
     const polygonBalances = await polygonAddress.listBalances();
 

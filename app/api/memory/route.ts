@@ -48,7 +48,6 @@ function extractMessages(
       message = message.substring(1).trim();
     }
     message = message.replace(/(^\s*\w|[.!?]\s*\w)/g, (c) => c.toUpperCase());
-    console.log(message);
     matches.push(message);
   }
 
@@ -64,7 +63,7 @@ export async function POST(request: NextRequest) {
     if (!uid) {
       throw new Error("User ID (uid) is required."); // Ensure UID is provided
     }
-    console.log("Received request for user w uid: ", uid);
+    console.log("Received request for user with OMI UID ", uid);
     const text = await request.text(); // Get the request body as text
     const data = JSON.parse(text); // Parse the JSON data
 
@@ -145,6 +144,8 @@ export async function POST(request: NextRequest) {
       }),
     );
 
+    console.log("processed_messages: ", processed_messages);
+
     // Handle the processed swaps
     const processed_swaps = await Promise.all(
       swap_messages.map(async (message) => {
@@ -173,8 +174,15 @@ export async function POST(request: NextRequest) {
       }),
     );
 
+    console.log("processed_swaps: ", processed_swaps);
+
     // Process each transaction message
     for (const msg of processed_messages) {
+      // check if the msg is a valid transaction
+      if (!msg?.amount || !msg?.currency || !msg?.network || !msg?.to) {
+        continue;
+      }
+
       // Fetch the recipient's wallet data from Supabase
       const { data: userData, error: userDataError } = await supabase
         .from("user")
@@ -226,6 +234,7 @@ export async function POST(request: NextRequest) {
         throw new Error("Transaction failed."); // Handle transaction failure
       } else {
         // Log the transaction in the Supabase database
+        console.log("adding tx to database");
         await supabase.from("transaction").insert({
           amount: msg.amount,
           currrency: msg.currency,
@@ -241,6 +250,17 @@ export async function POST(request: NextRequest) {
 
     // Handle the processed swaps
     for (const swap of processed_swaps) {
+      // check if the swap is valid
+      if (
+        !swap?.amount ||
+        !swap?.fromCurrency ||
+        !swap?.toCurrency ||
+        !swap?.network ||
+        swap?.network !== "base"
+      ) {
+        continue;
+      }
+
       const fromAssetId =
         swap.fromCurrency === "USDC"
           ? Coinbase.assets.Usdc
