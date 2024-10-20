@@ -91,6 +91,20 @@ export async function POST(request: NextRequest) {
     // Instantiate the wallet using the Coinbase provider
     const fromWallet = await Wallet.import(walletData?.wallet as WalletData);
 
+    const { data: userData, error: userError } = await supabase
+      .from("user")
+      .select("username")
+      .eq("omi_id", uid)
+      .single();
+
+    if (userError) {
+      throw new Error(`User fetch error: ${userError.message}`);
+    }
+
+    const fromUsername = userData?.username || null;
+
+    const usernamesList = allUsers.map((user) => user.username).join(", ");
+
     // Process each transaction message using OpenAI
     const processed_messages = await Promise.all(
       transaction_messages.map(async (message) => {
@@ -100,10 +114,12 @@ export async function POST(request: NextRequest) {
             {
               role: "system",
               content: `
-                The user will provide you with a text transcription of a spoken request to create a blockchain transaction. 
-                Extract the recipient, amount, and currency from the transaction message. 
-                Output a structured JSON object with 'to' for the recipient username, 'amount' for the amount, and 'currency' for the currency. 
-                Use 'USDC' for dollar amounts, otherwise use ETH.
+                The user will provide you with a text transcription of a spoken request to create a blockchain transaction on a specific network/chain. 
+                Extract the recipient, amount, currency, and network from the transaction message.
+                Output a structured JSON object with 'to' for the recipient username, 'amount' for the amount, 'currency' for the currency, and 'network' for the network.
+                Use 'USDC' for dollar amounts on any network.
+                Use SOL for Solana, and ETH for all other networks.
+                Available networks are: Base, Solana, Polygon, Arbitrum, Ethereum.
                 Here are the available usernames: ${usernamesList}.
               `,
             },
@@ -121,19 +137,11 @@ export async function POST(request: NextRequest) {
       }),
     );
 
-    const { data: userData, error: userError } = await supabase
-      .from("user")
-      .select("username")
-      .eq("omi_id", uid)
-      .single();
-
-    if (userError) {
-      throw new Error(`User fetch error: ${userError.message}`);
-    }
-
-    const fromUsername = userData?.username || null;
-
     for (const msg of processed_messages) {
+      console.log(
+        `Creating transfer from ${fromUsername} to ${msg.to} for ${msg.amount} ${msg.currency} on ${msg.network}`,
+      );
+
       const { data: toWalletData, error: toWalletError } = await supabase
         .from("user")
         .select("wallet")
@@ -148,9 +156,7 @@ export async function POST(request: NextRequest) {
         await Wallet.import(toWalletData?.wallet as WalletData)
       ).getDefaultAddress();
 
-      const transaction = await (
-        await fromWallet
-      ).createTransfer({
+      const transaction = await fromWallet.createTransfer({
         amount: msg.amount,
         assetId:
           msg.currency === "USDC" ? Coinbase.assets.Usdc : Coinbase.assets.Eth,
