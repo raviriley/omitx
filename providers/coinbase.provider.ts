@@ -5,4 +5,4 @@ const coinbaseClient = Coinbase.configure({
   privateKey: process.env["COINBASE_API_SECRET"]!,
 });
 
-export { coinbaseClient, Wallet };
+export { coinbaseClient, Wallet, Coinbase };
