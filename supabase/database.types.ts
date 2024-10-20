@@ -95,6 +95,13 @@ export type Database = {
         };
         Relationships: [
           {
+            foreignKeyName: "transaction_device_uid_fkey";
+            columns: ["device_uid"];
+            isOneToOne: false;
+            referencedRelation: "user";
+            referencedColumns: ["omi_id"];
+          },
+          {
             foreignKeyName: "transaction_from_fkey";
             columns: ["from"];
             isOneToOne: false;
