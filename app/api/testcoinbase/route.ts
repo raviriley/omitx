@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     console.error("Error creating wallet:", error);
     return NextResponse.json(
       { error: "Failed to create wallet" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
