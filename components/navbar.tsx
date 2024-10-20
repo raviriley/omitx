@@ -64,7 +64,7 @@ export function Navbar() {
         <div className="ml-auto flex-1 sm:flex-initial">
           <div className="flex justify-end gap-2">
             <div className="text-xs text-muted-foreground my-auto mr-1 flex items-center gap-1">
-              <Link href="https://github.com/sanjayamirthraj/local-notes/">
+              <Link href="https://github.com/raviriley/omitx/">
                 <GitHubLogoIcon className="h-4 w-4 hover:text-foreground" />
               </Link>
               created by{" "}
