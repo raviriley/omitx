@@ -29,34 +29,8 @@ const END_TRIGGER_PHRASES = [
 const SWAP_START_TRIGGER_PHRASES = ["start swap", "start swap."];
 const SWAP_END_TRIGGER_PHRASES = ["end swap", "end swap."];
 
-// Function to extract transaction messages from the transcript
-function extractTxMessages(
-  text: string,
-  startPhrases: string[],
-  endPhrases: string[],
-): string[] {
-  const startPattern = startPhrases.join("|");
-  const endPattern = endPhrases.join("|");
-  const matchRegex = new RegExp(`(${startPattern})(.*?)(${endPattern})`, "g");
-  const matches = [];
-  let match;
-
-  // Loop through matches and format the extracted messages
-  while ((match = matchRegex.exec(text)) !== null) {
-    let message = match[2].trim();
-    if (message.startsWith(".")) {
-      message = message.substring(1).trim();
-    }
-    message = message.replace(/(^\s*\w|[.!?]\s*\w)/g, (c) => c.toUpperCase());
-    console.log(message);
-    matches.push(message);
-  }
-
-  return matches;
-}
-
-// Function to extract swap messages from the transcript
-function extractSwapMessages(
+// Function to extract transaction and swap messages from the transcript
+function extractMessages(
   text: string,
   startPhrases: string[],
   endPhrases: string[],
@@ -100,13 +74,13 @@ export async function POST(request: NextRequest) {
       .join(" ");
 
     // Extract transaction and swap messages from the transcript
-    const transaction_messages = extractTxMessages(
+    const transaction_messages = extractMessages(
       transcript.toLowerCase(),
       START_TRIGGER_PHRASES,
       END_TRIGGER_PHRASES,
     );
 
-    const swap_messages = extractSwapMessages(
+    const swap_messages = extractMessages(
       transcript.toLowerCase(),
       SWAP_START_TRIGGER_PHRASES,
       SWAP_END_TRIGGER_PHRASES,
