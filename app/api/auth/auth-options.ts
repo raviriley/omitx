@@ -1,5 +1,6 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import { SupabaseProvider } from "@/providers/supabase.provider";
+import { Coinbase, Wallet } from "@/providers/coinbase.provider";
 import { NextAuthOptions } from "next-auth";
 
 const supabase = SupabaseProvider.supabase;
@@ -18,15 +19,17 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        const newWallet = await Wallet.create({
+          networkId: Coinbase.networks.BaseSepolia,
+        });
+        const userWallet = newWallet.export();
+
         const { data: user, error } = await supabase
           .from("user")
           .upsert({
             username: credentials.username,
             hash: credentials.password,
-            wallet: {
-              walletId: "",
-              seed: "",
-            },
+            wallet: userWallet,
           })
           .select()
           .single();

@@ -1,10 +1,6 @@
+import { WalletData } from "@coinbase/coinbase-sdk";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import NextAuth from "next-auth";
-
-type Wallet = {
-  walletId: string;
-  seed: string;
-};
 
 declare module "next-auth" {
   /**
@@ -14,7 +10,7 @@ declare module "next-auth" {
     user: {
       id: string;
       omiId: string;
-      wallet: Wallet;
+      wallet: WalletData;
       username: string;
     };
   }

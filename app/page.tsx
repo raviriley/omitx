@@ -10,7 +10,7 @@ export default function LoginPage() {
     return (
       <div className="p-4">
         <h1>Welcome {session.user?.username}</h1>
-        <p>Your polygon wallet is {session.user?.walletAddress}</p>
+        <p>Your wallet is {session.user?.wallet.walletId}</p>
         <p>
           Your Omi ID is {session.user?.omiId} and your db ID is{" "}
           {session.user?.id}
