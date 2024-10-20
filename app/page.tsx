@@ -110,7 +110,7 @@ export default async function LoginPage() {
 
     return (
       <div className="p-6">
-        <div className="mb-4 flex flex-col md:flex-row justify-between items-center bg-gradient-to-r from-purple-500 to-indigo-600 p-6 rounded-lg shadow-lg">
+        <div className="mb-4 flex flex-col md:flex-row justify-between items-center bg-gradient-to-r from-blue-500 to-blue-600 dark:from-purple-500 dark:to-indigo-600 p-6 rounded-lg shadow-lg">
           <h1 className="text-3xl font-extrabold text-white mb-4 md:mb-0">
             Dashboard
           </h1>
@@ -125,7 +125,7 @@ export default async function LoginPage() {
                 />
               </div>
             )}
-            <p className="text-xs text-indigo-200 mt-2">
+            <p className="text-xs text-blue-200 dark:text-indigo-200 mt-2">
               data last updated: {new Date().toLocaleString()}
             </p>
           </div>
@@ -134,7 +134,7 @@ export default async function LoginPage() {
         <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {Object.entries(walletsWithBalances).map(
             async ([chain, { wallet, balances }]) => (
-              <Card key={chain}>
+              <Card key={chain} className="hover:shadow-md hover:shadow-border">
                 <CardHeader>
                   <div className="flex items-center space-x-2">
                     <Image
@@ -181,7 +181,11 @@ export default async function LoginPage() {
                     <div className="flex flex-row">
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" className="mt-12">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="pt-auto"
+                          >
                             <Upload className="mr-2 h-4 w-4" />
                             Export Private Key
                           </Button>
