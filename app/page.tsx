@@ -40,10 +40,10 @@ export default async function LoginPage() {
     const baseWallet = await Wallet.import(data?.base_wallet as WalletData);
 
     const polygonWallet = await Wallet.import(
-      data?.polygon_wallet as WalletData
+      data?.polygon_wallet as WalletData,
     );
     const arbitrumWallet = await Wallet.import(
-      data?.arbitrum_wallet as WalletData
+      data?.arbitrum_wallet as WalletData,
     );
     const ethereumWallet = await Wallet.import(data?.eth_wallet as WalletData);
 
@@ -101,9 +101,11 @@ export default async function LoginPage() {
     const transactions = transactionsData?.map((transaction) => ({
       timestamp: new Date(transaction.created_at),
       hash: transaction.txid || "",
+      transcript: transaction.transcript || "",
       to: transaction.to || "",
       amount: transaction.amount || 0,
       chain: transaction.chain || "",
+      currency: transaction.currrency || "",
     }));
 
     return (
@@ -183,7 +185,7 @@ export default async function LoginPage() {
                             <li key={assetId} className="text-sm">
                               {balance.toString()} {assetId.toUpperCase()}
                             </li>
-                          )
+                          ),
                         )
                       )}
                     </ul>
@@ -223,7 +225,7 @@ export default async function LoginPage() {
                   </div>
                 </CardContent>
               </Card>
-            )
+            ),
           )}
         </div>
         <div className="mt-4">

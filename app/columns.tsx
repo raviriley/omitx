@@ -10,6 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 
 const NETWORK_EXPLORERS = {
@@ -23,9 +24,11 @@ const NETWORK_EXPLORERS = {
 type Transaction = {
   timestamp: Date;
   hash: string;
+  transcript: string;
   to: string;
   amount: number;
   chain: string;
+  currency: string;
 };
 
 export const columns: ColumnDef<Transaction>[] = [
@@ -42,21 +45,43 @@ export const columns: ColumnDef<Transaction>[] = [
     header: "Hash",
     cell: ({ row }) => {
       const transaction = row.original;
-      return <div className="truncate">{transaction.hash}</div>;
+      return (
+        <div className="truncate">
+          {transaction.hash.slice(0, 6)}...{transaction.hash.slice(-4)}
+        </div>
+      );
     },
   },
   {
-    accessorKey: "to",
-    header: "To",
+    accessorKey: "currency",
+    header: "Currency",
   },
   {
     accessorKey: "amount",
     header: "Amount",
   },
   {
+    accessorKey: "to",
+    header: "To",
+  },
+  {
     accessorKey: "chain",
     header: "Chain",
   },
+  {
+    accessorKey: "transcript",
+    header: "Transcript",
+    cell: ({ row }) => {
+      const transaction = row.original;
+      return (
+        <ScrollArea className="max-w-md">
+          <div className="truncate">{transaction.transcript}</div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+      );
+    },
+  },
+
   {
     id: "copy",
     cell: ({ row }) => {
