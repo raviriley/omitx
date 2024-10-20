@@ -9,6 +9,50 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      trade: {
+        Row: {
+          amount_deposit: number | null;
+          amount_receive: number | null;
+          created_at: string;
+          device_uid: string | null;
+          from_currency: string | null;
+          id: string;
+          to_currency: string | null;
+          transcript: string | null;
+          txid: string | null;
+        };
+        Insert: {
+          amount_deposit?: number | null;
+          amount_receive?: number | null;
+          created_at?: string;
+          device_uid?: string | null;
+          from_currency?: string | null;
+          id?: string;
+          to_currency?: string | null;
+          transcript?: string | null;
+          txid?: string | null;
+        };
+        Update: {
+          amount_deposit?: number | null;
+          amount_receive?: number | null;
+          created_at?: string;
+          device_uid?: string | null;
+          from_currency?: string | null;
+          id?: string;
+          to_currency?: string | null;
+          transcript?: string | null;
+          txid?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "trade_device_uid_fkey";
+            columns: ["device_uid"];
+            isOneToOne: false;
+            referencedRelation: "user";
+            referencedColumns: ["omi_id"];
+          },
+        ];
+      };
       transaction: {
         Row: {
           amount: number | null;
