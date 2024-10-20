@@ -48,8 +48,6 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async session({ session, token }: { session: any; token: any }) {
-      console.log("session", session);
-      console.log("token", token);
       const { data: user } = await supabase
         .from("user")
         .select("*")
