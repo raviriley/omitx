@@ -134,17 +134,51 @@ export default async function LoginPage() {
         <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {Object.entries(walletsWithBalances).map(
             async ([chain, { wallet, balances }]) => (
-              <Card key={chain} className="hover:shadow-md hover:shadow-border">
+              <Card
+                key={chain}
+                className="hover:shadow-md hover:shadow-border transition-all duration-300"
+              >
                 <CardHeader>
-                  <div className="flex items-center space-x-2">
-                    <Image
-                      src={`/${chain.toLowerCase()}-logo.svg`}
-                      alt={`${chain} logo`}
-                      className="max-w-8 max-h-8"
-                      width={32}
-                      height={32}
-                    />
-                    <CardTitle className="capitalize">{chain}</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Image
+                        src={`/${chain.toLowerCase()}-logo.svg`}
+                        alt={`${chain} logo`}
+                        className="max-w-8 max-h-8"
+                        width={32}
+                        height={32}
+                      />
+                      <CardTitle className="capitalize">{chain}</CardTitle>
+                    </div>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="group">
+                          <Upload className="h-4 w-4 transition-transform group-hover:-translate-y-0.5" />
+                          <span className="ml-2">Private Key</span>
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>
+                            {chain.charAt(0).toUpperCase() + chain.slice(1)}{" "}
+                            Private Key
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div className="mt-2">
+                          <PrivateKeyDisplay
+                            privateKey={(
+                              await wallet.getDefaultAddress()
+                            ).export()}
+                          />
+                        </div>
+                        <div className="flex justify-end mt-4">
+                          <CopyButton
+                            value={(await wallet.getDefaultAddress()).export()}
+                            toastMessage={`Copied ${chain} private key to clipboard`}
+                          />
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -178,43 +212,6 @@ export default async function LoginPage() {
                         )
                       )}
                     </ul>
-                    <div className="flex flex-row">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="pt-auto"
-                          >
-                            <Upload className="mr-2 h-4 w-4" />
-                            Export Private Key
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>
-                              {chain.charAt(0).toUpperCase() + chain.slice(1)}{" "}
-                              Private Key
-                            </DialogTitle>
-                          </DialogHeader>
-                          <div className="mt-2">
-                            <PrivateKeyDisplay
-                              privateKey={(
-                                await wallet.getDefaultAddress()
-                              ).export()}
-                            />
-                          </div>
-                          <div className="flex justify-end mt-4">
-                            <CopyButton
-                              value={(
-                                await wallet.getDefaultAddress()
-                              ).export()}
-                              toastMessage={`Copied ${chain} private key to clipboard`}
-                            />
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
