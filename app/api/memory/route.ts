@@ -19,11 +19,18 @@ const client = new OpenAI({
 const supabase = SupabaseProvider.supabase;
 
 // Define trigger phrases for transaction and swap extraction
-const START_TRIGGER_PHRASES = ["start transaction", "start transaction."];
+const START_TRIGGER_PHRASES = [
+  "start transaction",
+  "start transaction.",
+  "start the transaction",
+  "start the transaction.",
+];
 const END_TRIGGER_PHRASES = [
   "end transaction",
   "end transaction.",
   "and transaction",
+  "end the transaction",
+  "end the transaction.",
 ];
 
 const SWAP_START_TRIGGER_PHRASES = ["start swap", "start swap."];
