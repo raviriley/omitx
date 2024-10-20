@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 type Transaction = {
   timestamp: Date;
@@ -23,10 +24,10 @@ type Transaction = {
 export const columns: ColumnDef<Transaction>[] = [
   {
     accessorKey: "timestamp",
-    header: () => <div className="text-right">Timestamp</div>,
+    header: () => <div className="text-left">Timestamp</div>,
     cell: ({ row }) => {
       const timestamp = new Date(row.original.timestamp);
-      return <div className="text-right">{timestamp.toLocaleString()}</div>;
+      return <div className="text-left">{timestamp.toLocaleString()}</div>;
     },
   },
   {
@@ -61,7 +62,10 @@ export const columns: ColumnDef<Transaction>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(transaction.hash)}
+              onClick={() => {
+                navigator.clipboard.writeText(transaction.hash);
+                toast.success("Copied to clipboard");
+              }}
             >
               Copy transaction hash
             </DropdownMenuItem>
