@@ -70,13 +70,13 @@ export default async function LoginPage() {
       },
     };
 
-    const transactionsData = await supabase
+    const { data: transactionsData } = await supabase
       .from("transaction")
       .select("*")
       .eq("from", session.user?.username)
-      .order("timestamp", { ascending: false });
+      .order("created_at", { ascending: false });
 
-    const transactions = transactionsData.data?.map((transaction) => ({
+    const transactions = transactionsData?.map((transaction) => ({
       timestamp: new Date(transaction.created_at),
       hash: transaction.txid || "",
       to: transaction.to || "",
