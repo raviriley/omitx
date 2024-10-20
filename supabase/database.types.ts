@@ -126,7 +126,9 @@ export type Database = {
           id: number;
           omi_id: string | null;
           polygon_wallet: Json | null;
+          ripple_wallet: Json | null;
           sol_wallet: Json | null;
+          sui_wallet: Json | null;
           username: string;
         };
         Insert: {
@@ -137,7 +139,9 @@ export type Database = {
           id?: number;
           omi_id?: string | null;
           polygon_wallet?: Json | null;
+          ripple_wallet?: Json | null;
           sol_wallet?: Json | null;
+          sui_wallet?: Json | null;
           username: string;
         };
         Update: {
@@ -148,7 +152,9 @@ export type Database = {
           id?: number;
           omi_id?: string | null;
           polygon_wallet?: Json | null;
+          ripple_wallet?: Json | null;
           sol_wallet?: Json | null;
+          sui_wallet?: Json | null;
           username?: string;
         };
         Relationships: [];
