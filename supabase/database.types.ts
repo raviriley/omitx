@@ -62,25 +62,37 @@ export type Database = {
       };
       user: {
         Row: {
+          arbitrum_wallet: Json | null;
+          base_wallet: Json | null;
+          eth_wallet: Json | null;
           hash: string;
           id: number;
           omi_id: string | null;
+          polygon_wallet: Json | null;
+          sol_wallet: Json | null;
           username: string;
-          wallet: Json | null;
         };
         Insert: {
+          arbitrum_wallet?: Json | null;
+          base_wallet?: Json | null;
+          eth_wallet?: Json | null;
           hash: string;
           id?: number;
           omi_id?: string | null;
+          polygon_wallet?: Json | null;
+          sol_wallet?: Json | null;
           username: string;
-          wallet?: Json | null;
         };
         Update: {
+          arbitrum_wallet?: Json | null;
+          base_wallet?: Json | null;
+          eth_wallet?: Json | null;
           hash?: string;
           id?: number;
           omi_id?: string | null;
+          polygon_wallet?: Json | null;
+          sol_wallet?: Json | null;
           username?: string;
-          wallet?: Json | null;
         };
         Relationships: [];
       };

@@ -12,7 +12,11 @@ const client = new OpenAI({
 const supabase = SupabaseProvider.supabase;
 
 const START_TRIGGER_PHRASES = ["start transaction", "start transaction."];
-const END_TRIGGER_PHRASES = ["end transaction", "end transaction.", "and transaction"];
+const END_TRIGGER_PHRASES = [
+  "end transaction",
+  "end transaction.",
+  "and transaction",
+];
 
 function extractTxMessages(
   text: string,
