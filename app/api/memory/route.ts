@@ -31,6 +31,8 @@ const END_TRIGGER_PHRASES = [
   "and transaction",
   "end the transaction",
   "end the transaction.",
+  "and the transaction",
+  "and the transaction.",
 ];
 
 const SWAP_START_TRIGGER_PHRASES = ["start swap", "start swap."];
@@ -233,7 +235,7 @@ export async function POST(request: NextRequest) {
         assetId:
           msg.currency === "USDC" ? Coinbase.assets.Usdc : Coinbase.assets.Eth,
         destination: toWallet,
-        gasless: msg.currency === "USDC", // Use gasless transfer for USDC
+        gasless: msg.currency === "USDC" && msg.network === "base", // Use gasless transfer for USDC on Base
       });
 
       const transactionReceipt = await transaction.wait(); // Wait for the transaction to complete
