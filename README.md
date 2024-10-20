@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OmiSwap: AI-Powered On-Chain Interactions
 
-## Getting Started
+OmiSwap is the first platform to enable on-chain interactions powered by an AI wearable device. We revolutionize the way users interact with blockchain technology by translating voice intents into on-chain transactions and swaps.
 
-First, run the development server:
+## Key Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Voice-Activated Transactions**: Execute intents using trigger phrases like "start transaction" and "end transaction".
+- **Multi-Chain Support**: Integrated with multiple blockchain networks to ensure the highest compatibility.
+- **AI-Powered Interaction**: Leveraging cutting-edge AI technology to interpret and execute user intents.
+- **Exportable custodial wallets**: We create your wallets for you on every supported chain, but still give you full access to your private keys and you retain the ability to export your wallets at any time
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Technology Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Frontend**: Next.js with shadcn/ui
+- **Authentication**: next-auth
+- **Database**: Supabase
+- **Blockchain Interactions**:
+  - Coinbase
+    - Base
+    - Polygon
+    - Arbitrum
+    - Ethereum
+  - Ripple (EVM Side Chain)
+  - Sui
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## How It Works
 
-## Learn More
+1. Users wear the Omi wearable device and activate it with voice commands.
+2. Our API interprets the user's intent from natural language. For example, "I want to send five bucks to Rohan on Polygon" → `to: Rohan`, `currency: USDC`, `network: polygon`, `amount: 5`
+3. OmiSwap translates the intent into specific blockchain operations.
+4. Transactions are executed on the chosen blockchain network.
+5. Users receive confirmation of their completed actions in a beautiful, easy to understand UI.
 
-To learn more about Next.js, take a look at the following resources:
+## Why OmiSwap?
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+OmiSwap stands out by offering:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Seamless User Experience**: No need for complex interfaces or deep technical knowledge.
+- **Cross-Chain Flexibility**: Execute transactions across different networks effortlessly just by saying so.
+- **Innovative Interaction**: Pioneering the use of AI wearables for blockchain interactions.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Join us in shaping the future of decentralized finance with OmiSwap - where your ~~wish~~ _intent_ is your command!
