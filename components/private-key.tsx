@@ -22,7 +22,7 @@ export function PrivateKeyDisplay({ privateKey }: { privateKey: string }) {
         disabled
         className="text-sm font-medium break-all cursor-text"
       />
-      <button onClick={toggleReveal} className="ml-2">
+      <button onClick={toggleReveal} className="ml-4">
         {isRevealed ? <EyeOff /> : <Eye />}
       </button>
     </div>
