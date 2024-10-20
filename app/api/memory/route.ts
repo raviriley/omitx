@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
           throw new Error("No transactions detected.");
         }
 
-        return JSON.parse(extractedInfo);
+        return { ...JSON.parse(extractedInfo), transcript: message };
       })
     );
 
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
           device_uid: uid,
           from: fromUsername,
           to: msg.to,
-          transcript: transcript,
+          transcript: msg.transcript,
           txid: transactionReceipt.getId(),
         });
       }
