@@ -15,7 +15,7 @@ const END_TRIGGER_PHRASES = ["end transaction", "end transaction."];
 function extractTxMessages(
   text: string,
   startPhrases: string[],
-  endPhrases: string[]
+  endPhrases: string[],
 ): string[] {
   const startPattern = startPhrases.join("|");
   const endPattern = endPhrases.join("|");
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     const transaction_messages = extractTxMessages(
       transcript.toLowerCase(),
       START_TRIGGER_PHRASES,
-      END_TRIGGER_PHRASES
+      END_TRIGGER_PHRASES,
     );
 
     // process each transaction message using openai
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
 
         const extractedInfo = response.choices[0].message.content;
         return JSON.parse(extractedInfo!);
-      })
+      }),
     );
 
     // Insert processed messages into the database
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
       `Webhook error: ${error instanceof Error ? error.message : `Unknown error: ${error}`}`,
       {
         status: 400,
-      }
+      },
     );
   }
 
