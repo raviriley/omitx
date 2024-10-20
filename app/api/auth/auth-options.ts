@@ -19,17 +19,32 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const newWallet = await Wallet.create({
-          networkId: Coinbase.networks.BaseSepolia,
+        const newBaseWallet = await Wallet.create({
+          networkId: Coinbase.networks.BaseMainnet,
         });
-        const userWallet = newWallet.export();
+        const newSolanaWallet = await Wallet.create({
+          networkId: Coinbase.networks.SolanaMainnet,
+        });
+        const newPolygonWallet = await Wallet.create({
+          networkId: Coinbase.networks.PolygonMainnet,
+        });
+        const newArbitrumWallet = await Wallet.create({
+          networkId: Coinbase.networks.ArbitrumMainnet,
+        });
+        const newEthereumWallet = await Wallet.create({
+          networkId: Coinbase.networks.EthereumMainnet,
+        });
 
         const { data: user, error } = await supabase
           .from("user")
           .upsert({
             username: credentials.username,
             hash: credentials.password,
-            wallet: userWallet,
+            base_wallet: newBaseWallet.export(),
+            solana_wallet: newSolanaWallet.export(),
+            polygon_wallet: newPolygonWallet.export(),
+            arbitrum_wallet: newArbitrumWallet.export(),
+            ethereum_wallet: newEthereumWallet.export(),
           })
           .select()
           .single();
