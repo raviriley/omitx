@@ -10,8 +10,12 @@ declare module "next-auth" {
     user: {
       id: string;
       omiId: string;
-      wallet: WalletData;
       username: string;
+      baseWallet: WalletData;
+      solanaWallet: WalletData;
+      polygonWallet: WalletData;
+      arbitrumWallet: WalletData;
+      ethereumWallet: WalletData;
     };
   }
 }
