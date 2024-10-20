@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import OpenAI from "openai";
 import { SupabaseProvider } from "@/providers/supabase.provider";
-import { Wallet } from "@/providers/coinbase.provider";
+import { Wallet, Coinbase } from "@/providers/coinbase.provider";
+import { TransferStatus, WalletData } from "@coinbase/coinbase-sdk";
 
 const client = new OpenAI({
   baseURL: "https://api.red-pill.ai/v1",
@@ -16,7 +17,7 @@ const END_TRIGGER_PHRASES = ["end transaction", "end transaction."];
 function extractTxMessages(
   text: string,
   startPhrases: string[],
-  endPhrases: string[],
+  endPhrases: string[]
 ): string[] {
   const startPattern = startPhrases.join("|");
   const endPattern = endPhrases.join("|");
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
     const transaction_messages = extractTxMessages(
       transcript.toLowerCase(),
       START_TRIGGER_PHRASES,
-      END_TRIGGER_PHRASES,
+      END_TRIGGER_PHRASES
     );
 
     if (transaction_messages.length === 0) {
@@ -87,10 +88,8 @@ export async function POST(request: NextRequest) {
       throw new Error(`Wallet fetch error: ${walletError.message}`);
     }
 
-    const walletAddress = walletData?.wallet;
-
     // Instantiate the wallet using the Coinbase provider
-    const wallet = Wallet.import(walletAddress);
+    const fromWallet = await Wallet.import(walletData?.wallet as WalletData);
 
     // Process each transaction message using OpenAI
     const processed_messages = await Promise.all(
@@ -118,21 +117,8 @@ export async function POST(request: NextRequest) {
           throw new Error("No transactions detected.");
         }
 
-        // Perform the transaction using the instantiated wallet
-        const transactionResult = await wallet.createTransfer({
-          amount: msg.amount,
-          assetId:
-            msg.currency === "USDC"
-              ? Coinbase.assets.Usdc
-              : Coinbase.assets.Eth,
-          destination: msg.to,
-        });
-
-        // Wait for the transaction to complete
-        await transactionResult.wait();
-
         return JSON.parse(extractedInfo);
-      }),
+      })
     );
 
     const { data: userData, error: userError } = await supabase
@@ -147,33 +133,52 @@ export async function POST(request: NextRequest) {
 
     const fromUsername = userData?.username || null;
 
-    const { data: insertedData, error } = await supabase
-      .from("transaction")
-      .insert(
-        processed_messages.map((msg) => ({
+    for (const msg of processed_messages) {
+      const { data: toWalletData, error: toWalletError } = await supabase
+        .from("user")
+        .select("wallet")
+        .eq("username", msg.to)
+        .single();
+
+      if (toWalletError) {
+        throw new Error(`To wallet fetch error: ${toWalletError.message}`);
+      }
+
+      const toWallet = await (
+        await Wallet.import(toWalletData?.wallet as WalletData)
+      ).getDefaultAddress();
+
+      const transaction = await (
+        await fromWallet
+      ).createTransfer({
+        amount: msg.amount,
+        assetId:
+          msg.currency === "USDC" ? Coinbase.assets.Usdc : Coinbase.assets.Eth,
+        destination: toWallet,
+      });
+
+      const transactionReceipt = await transaction.wait();
+      if (transactionReceipt.getStatus() !== TransferStatus.COMPLETE) {
+        throw new Error("Transaction failed.");
+      } else {
+        await supabase.from("transaction").insert({
           amount: msg.amount,
           currrency: msg.currency,
           device_uid: uid,
           from: fromUsername,
-          id: crypto.randomUUID(),
           to: msg.to,
           transcript: transcript,
-          txid: null,
-        })),
-      );
-
-    if (error) {
-      throw new Error(`Database insert error: ${error.message}`);
+          txid: transactionReceipt.getId(),
+        });
+      }
     }
-
-    console.log("Inserted data:", insertedData);
   } catch (error) {
     console.error("Error:", error);
     return new Response(
       `Webhook error: ${error instanceof Error ? error.message : `Unknown error: ${error}`}`,
       {
         status: 400,
-      },
+      }
     );
   }
 
