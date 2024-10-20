@@ -45,7 +45,7 @@ const OmiIdEditor = ({
                 placeholder="Enter your Omi ID"
                 className={cn(
                   "bg-indigo-700 text-indigo-100 placeholder-indigo-300 border-indigo-600",
-                  "focus:border-indigo-500 focus:ring-indigo-500"
+                  "focus:border-indigo-500 focus:ring-indigo-500",
                 )}
               />
             </TooltipTrigger>
