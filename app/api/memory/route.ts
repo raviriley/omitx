@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       throw new Error(`Wallet fetch error: ${walletError.message}`);
     }
 
-    const walletAddress = walletData?.polygon_wallet;
+    const walletAddress = walletData?.walle;
 
     // Instantiate the wallet using the Coinbase provider
     const wallet = Wallet.import(walletAddress);
