@@ -137,7 +137,7 @@ export default async function LoginPage() {
               </div>
             )}
             <p className="text-xs text-indigo-200 mt-2">
-              Last updated: {new Date().toLocaleString()}
+              data last updated: {new Date().toLocaleString()}
             </p>
           </div>
         </div>
