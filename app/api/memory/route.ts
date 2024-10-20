@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     );
 
     if (transaction_messages.length === 0) {
-      throw new Error("No transactions detected.");
+      return new Response(null, { status: 204 });
     }
 
     const { data: allUsers, error: allUsersError } = await supabase
