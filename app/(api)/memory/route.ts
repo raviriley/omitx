@@ -55,6 +55,49 @@ export async function POST(request: NextRequest) {
     );
 
     // process each transaction message using openai
+    const processed_messages = await Promise.all(
+      transaction_messages.map(async (message) => {
+        const response = await client.chat.completions.create({
+          model: "gpt-4-0613",
+          messages: [
+            {
+              role: "system",
+              content:
+                "Extract the recipient and currency from the transaction message. Output a JSON object with 'to' for the recipient and 'currency' for the currency. Use 'USDC' for dollar amounts.",
+            },
+            { role: "user", content: message },
+          ],
+          functions: [
+            {
+              name: "extract_transaction_info",
+              description:
+                "Extracts recipient and currency information from a transaction message",
+              parameters: {
+                type: "object",
+                properties: {
+                  to: {
+                    type: "string",
+                    description: "The recipient of the transaction",
+                  },
+                  currency: {
+                    type: "string",
+                    description:
+                      "The currency of the transaction ('USDC' or 'ETH')",
+                  },
+                },
+                required: ["to", "currency"],
+              },
+            },
+          ],
+          function_call: { name: "extract_transaction_info" },
+        });
+
+        const extractedInfo = JSON.parse(
+          response.choices[0].message.function_call.arguments,
+        );
+        return extractedInfo;
+      }),
+    );
 
     // add to db
   } catch (error) {
