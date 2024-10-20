@@ -7,6 +7,7 @@ import {
   TransferStatus,
   WalletData,
 } from "@coinbase/coinbase-sdk";
+import { revalidatePath } from "next/cache";
 
 // Initialize OpenAI client with Red Pill's base URL and API key
 const client = new OpenAI({
@@ -327,6 +328,8 @@ export async function POST(request: NextRequest) {
       },
     );
   }
+
+  revalidatePath("/");
 
   return new Response("Success!", {
     status: 200, // Return a 200 OK response on success
