@@ -8,13 +8,16 @@ import {
   WalletData,
 } from "@coinbase/coinbase-sdk";
 
+// Initialize OpenAI client with Red Pill's base URL and API key
 const client = new OpenAI({
   baseURL: "https://api.red-pill.ai/v1",
   apiKey: process.env["OPENAI_API_KEY"],
 });
 
+// Initialize Supabase client
 const supabase = SupabaseProvider.supabase;
 
+// Define trigger phrases for transaction and swap extraction
 const START_TRIGGER_PHRASES = ["start transaction", "start transaction."];
 const END_TRIGGER_PHRASES = [
   "end transaction",
@@ -25,7 +28,7 @@ const END_TRIGGER_PHRASES = [
 const SWAP_START_TRIGGER_PHRASES = ["start swap", "start swap."];
 const SWAP_END_TRIGGER_PHRASES = ["end swap", "end swap."];
 
-// Function to extract transaction messages
+// Function to extract transaction messages from the transcript
 function extractTxMessages(
   text: string,
   startPhrases: string[],
@@ -36,6 +39,8 @@ function extractTxMessages(
   const matchRegex = new RegExp(`(${startPattern})(.*?)(${endPattern})`, "g");
   const matches = [];
   let match;
+
+  // Loop through matches and format the extracted messages
   while ((match = matchRegex.exec(text)) !== null) {
     let message = match[2].trim();
     if (message.startsWith(".")) {
@@ -49,7 +54,7 @@ function extractTxMessages(
   return matches;
 }
 
-// Function to extract swap messages
+// Function to extract swap messages from the transcript
 function extractSwapMessages(
   text: string,
   startPhrases: string[],
@@ -60,6 +65,8 @@ function extractSwapMessages(
   const matchRegex = new RegExp(`(${startPattern})(.*?)(${endPattern})`, "g");
   const matches = [];
   let match;
+
+  // Loop through matches and format the extracted messages
   while ((match = matchRegex.exec(text)) !== null) {
     let message = match[2].trim();
     if (message.startsWith(".")) {
@@ -73,23 +80,25 @@ function extractSwapMessages(
   return matches;
 }
 
+// Main function to handle POST requests
 export async function POST(request: NextRequest) {
   try {
     const reqUrl = request.url;
     const { searchParams } = new URL(reqUrl);
-    const uid = searchParams.get("uid");
+    const uid = searchParams.get("uid"); // Extract user ID from query parameters
     if (!uid) {
-      throw new Error("User ID (uid) is required.");
+      throw new Error("User ID (uid) is required."); // Ensure UID is provided
     }
     console.log("Received request for user w uid: ", uid);
-    const text = await request.text();
-    const data = JSON.parse(text);
+    const text = await request.text(); // Get the request body as text
+    const data = JSON.parse(text); // Parse the JSON data
 
     // Combine all transcript segments into a single string
     const transcript = data.transcript_segments
       .map((segment: { text: string }) => segment.text)
       .join(" ");
 
+    // Extract transaction and swap messages from the transcript
     const transaction_messages = extractTxMessages(
       transcript.toLowerCase(),
       START_TRIGGER_PHRASES,
@@ -102,10 +111,12 @@ export async function POST(request: NextRequest) {
       SWAP_END_TRIGGER_PHRASES,
     );
 
+    // If no messages are found, return a 204 No Content response
     if (transaction_messages.length === 0 && swap_messages.length === 0) {
       return new Response(null, { status: 204 });
     }
 
+    // Fetch all usernames from the Supabase database
     const { data: allUsers, error: allUsersError } = await supabase
       .from("user")
       .select("username");
@@ -114,6 +125,7 @@ export async function POST(request: NextRequest) {
       throw new Error(`User fetch error: ${allUsersError.message}`);
     }
 
+    // Fetch the specific user data based on the provided UID
     const { data: userData, error: userError } = await supabase
       .from("user")
       .select("username")
@@ -124,9 +136,8 @@ export async function POST(request: NextRequest) {
       throw new Error(`User fetch error: ${userError.message}`);
     }
 
-    const fromUsername = userData?.username || null;
-
-    const usernamesList = allUsers.map((user) => user.username).join(", ");
+    const fromUsername = userData?.username || null; // Get the username of the sender
+    const usernamesList = allUsers.map((user) => user.username).join(", "); // Create a list of usernames
 
     // Process each transaction message using OpenAI
     const processed_messages = await Promise.all(
@@ -150,12 +161,12 @@ export async function POST(request: NextRequest) {
           response_format: { type: "json_object" },
         });
 
-        const extractedInfo = response.choices[0].message.content;
+        const extractedInfo = response.choices[0].message.content; // Extract the structured information from the response
         if (!extractedInfo) {
-          throw new Error("No transactions detected.");
+          throw new Error("No transactions detected."); // Handle case where no transactions are detected
         }
 
-        return { ...JSON.parse(extractedInfo), transcript: message };
+        return { ...JSON.parse(extractedInfo), transcript: message }; // Return the parsed transaction info along with the original message
       }),
     );
 
@@ -178,16 +189,18 @@ export async function POST(request: NextRequest) {
           response_format: { type: "json_object" },
         });
 
-        const extractedInfo = response.choices[0].message.content;
+        const extractedInfo = response.choices[0].message.content; // Extract the structured information from the response
         if (!extractedInfo) {
-          throw new Error("No swaps detected.");
+          throw new Error("No swaps detected."); // Handle case where no swaps are detected
         }
 
-        return { ...JSON.parse(extractedInfo), transcript: message };
+        return { ...JSON.parse(extractedInfo), transcript: message }; // Return the parsed swap info along with the original message
       }),
     );
 
+    // Process each transaction message
     for (const msg of processed_messages) {
+      // Fetch the recipient's wallet data from Supabase
       const { data: userData, error: userDataError } = await supabase
         .from("user")
         .select("*")
@@ -198,13 +211,12 @@ export async function POST(request: NextRequest) {
         throw new Error(`To wallet fetch error: ${userDataError.message}`);
       }
 
-      const chosenNetwork = `${msg.network.toLowerCase()}_wallet`;
-
+      const chosenNetwork = `${msg.network.toLowerCase()}_wallet`; // Determine the wallet field based on the network
       const toWallet = await (
         await Wallet.import(
           userData[chosenNetwork as keyof typeof userData] as WalletData,
         )
-      ).getDefaultAddress();
+      ).getDefaultAddress(); // Get the default address of the recipient's wallet
 
       // Fetch sender wallet data from Supabase
       const { data: senderWalletData, error: senderWalletDataError } =
@@ -214,7 +226,7 @@ export async function POST(request: NextRequest) {
         throw new Error(`Wallet fetch error: ${senderWalletDataError.message}`);
       }
 
-      // Instantiate the wallet using the Coinbase provider
+      // Instantiate the sender's wallet using the Coinbase provider
       const fromWallet = await Wallet.import(
         senderWalletData[
           chosenNetwork as keyof typeof senderWalletData
@@ -225,18 +237,20 @@ export async function POST(request: NextRequest) {
         `Creating transfer from ${fromUsername} (${(await fromWallet.getDefaultAddress()).getId()}) to ${msg.to} (${toWallet.getId()}) for ${msg.amount} ${msg.currency} on ${msg.network}`,
       );
 
+      // Create the transfer transaction
       const transaction = await fromWallet.createTransfer({
         amount: msg.amount,
         assetId:
           msg.currency === "USDC" ? Coinbase.assets.Usdc : Coinbase.assets.Eth,
         destination: toWallet,
-        gasless: msg.currency === "USDC",
+        gasless: msg.currency === "USDC", // Use gasless transfer for USDC
       });
 
-      const transactionReceipt = await transaction.wait();
+      const transactionReceipt = await transaction.wait(); // Wait for the transaction to complete
       if (transactionReceipt.getStatus() !== TransferStatus.COMPLETE) {
-        throw new Error("Transaction failed.");
+        throw new Error("Transaction failed."); // Handle transaction failure
       } else {
+        // Log the transaction in the Supabase database
         await supabase.from("transaction").insert({
           amount: msg.amount,
           currrency: msg.currency,
@@ -255,9 +269,9 @@ export async function POST(request: NextRequest) {
       const fromAssetId =
         swap.fromCurrency === "USDC"
           ? Coinbase.assets.Usdc
-          : Coinbase.assets.Eth;
+          : Coinbase.assets.Eth; // Determine the asset ID for the currency being swapped from
       const toAssetId =
-        swap.toCurrency === "USDC" ? Coinbase.assets.Usdc : Coinbase.assets.Eth;
+        swap.toCurrency === "USDC" ? Coinbase.assets.Usdc : Coinbase.assets.Eth; // Determine the asset ID for the currency being swapped to
 
       console.log(
         `Creating trade from ${swap.fromCurrency} to ${swap.toCurrency} for ${swap.amount} on ${swap.network}`,
@@ -271,25 +285,27 @@ export async function POST(request: NextRequest) {
         throw new Error(`Wallet fetch error: ${senderWalletDataError.message}`);
       }
 
-      const chosenNetwork = `${swap.network.toLowerCase()}_wallet`;
+      const chosenNetwork = `${swap.network.toLowerCase()}_wallet`; // Determine the wallet field based on the network
 
-      // Instantiate the wallet using the Coinbase provider
+      // Instantiate the sender's wallet using the Coinbase provider
       const fromWallet = await Wallet.import(
         senderWalletData[
           chosenNetwork as keyof typeof senderWalletData
         ] as WalletData,
       );
 
+      // Create the trade transaction
       const trade = await fromWallet.createTrade({
         amount: swap.amount,
         fromAssetId: fromAssetId,
         toAssetId: toAssetId,
       });
 
-      const tradeReceipt = await trade.wait();
+      const tradeReceipt = await trade.wait(); // Wait for the trade to complete
       if (tradeReceipt.getStatus() !== TransactionStatus.COMPLETE) {
-        throw new Error("Trade failed.");
+        throw new Error("Trade failed."); // Handle trade failure
       } else {
+        // Log the trade in the Supabase database
         await supabase.from("trade").insert({
           amount_deposit: swap.amount,
           amount_receive: tradeReceipt.getToAmount().toNumber(),
@@ -307,17 +323,18 @@ export async function POST(request: NextRequest) {
     return new Response(
       `Webhook error: ${error instanceof Error ? error.message : `Unknown error: ${error}`}`,
       {
-        status: 400,
+        status: 400, // Return a 400 Bad Request response on error
       },
     );
   }
 
   return new Response("Success!", {
-    status: 200,
+    status: 200, // Return a 200 OK response on success
   });
 }
 
+// Function to handle GET requests (currently logs the request body)
 export async function GET(request: Request) {
   console.error(request.text());
-  return new Response("Worked", { status: 200 });
+  return new Response("Worked", { status: 200 }); // Return a 200 OK response
 }
