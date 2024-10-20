@@ -134,7 +134,7 @@ export default async function LoginPage() {
                       <CopyButton
                         className="ml-2"
                         value={address.getId()}
-                        toastMessage={`Copied ${chain} address to clipboard`}
+                        toastMessage={`copied ${chain.charAt(0).toUpperCase() + chain.slice(1)} address to clipboard`}
                       />
                     </div>
                   </div>
