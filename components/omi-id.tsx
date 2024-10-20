@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
 import { updateOmiId } from "@/lib/omi-action";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const OmiIdEditor = ({
   initialOmiId,
@@ -28,20 +34,32 @@ const OmiIdEditor = ({
   };
 
   return (
-    <div className={cn("flex items-center space-x-2", className)}>
-      <div className="flex-grow">
-        <Input
-          value={omiId}
-          onChange={(e) => setOmiId(e.target.value)}
-          placeholder="Enter your Omi ID"
-          className={cn(
-            "bg-indigo-700 text-indigo-100 placeholder-indigo-300 border-indigo-600",
-            "focus:border-indigo-500 focus:ring-indigo-500",
-          )}
-        />
+    <TooltipProvider>
+      <div className={cn("flex items-center space-x-2", className)}>
+        <div className="flex-grow">
+          <Tooltip>
+            <TooltipTrigger>
+              <Input
+                value={omiId}
+                onChange={(e) => setOmiId(e.target.value)}
+                placeholder="Enter your Omi ID"
+                className={cn(
+                  "bg-indigo-700 text-indigo-100 placeholder-indigo-300 border-indigo-600",
+                  "focus:border-indigo-500 focus:ring-indigo-500"
+                )}
+              />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>
+                To find your Omi ID, open the Omi app and go to Settings &gt;
+                Profile &gt; Other &gt; Your User ID
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+        <Button onClick={handleSave}>Save</Button>
       </div>
-      <Button onClick={handleSave}>Save</Button>
-    </div>
+    </TooltipProvider>
   );
 };
 
