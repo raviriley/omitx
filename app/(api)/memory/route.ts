@@ -1,9 +1,13 @@
 import { NextRequest } from "next/server";
 import OpenAI from "openai";
+import { SupabaseProvider } from "@/providers/supabase.provider";
 
 const client = new OpenAI({
-  apiKey: process.env["OPENAI_API_KEY"], // This is the default and can be omitted
+  baseURL: "https://api.red-pill.ai/v1",
+  apiKey: process.env["OPENAI_API_KEY"],
 });
+
+const supabase = SupabaseProvider.supabase;
 
 const START_TRIGGER_PHRASES = ["start transaction", "start transaction."];
 const END_TRIGGER_PHRASES = ["end transaction", "end transaction."];
@@ -11,7 +15,7 @@ const END_TRIGGER_PHRASES = ["end transaction", "end transaction."];
 function extractTxMessages(
   text: string,
   startPhrases: string[],
-  endPhrases: string[],
+  endPhrases: string[]
 ): string[] {
   const startPattern = startPhrases.join("|");
   const endPattern = endPhrases.join("|");
@@ -51,62 +55,51 @@ export async function POST(request: NextRequest) {
     const transaction_messages = extractTxMessages(
       transcript.toLowerCase(),
       START_TRIGGER_PHRASES,
-      END_TRIGGER_PHRASES,
+      END_TRIGGER_PHRASES
     );
 
     // process each transaction message using openai
     const processed_messages = await Promise.all(
       transaction_messages.map(async (message) => {
         const response = await client.chat.completions.create({
-          model: "gpt-4-0613",
+          model: "gpt-4o-mini",
           messages: [
             {
               role: "system",
-              content:
-                "Extract the recipient and currency from the transaction message. Output a JSON object with 'to' for the recipient and 'currency' for the currency. Use 'USDC' for dollar amounts.",
+              content: `
+                The user will provide you with a text transcription of a spoken request to create a blockchain transaction. 
+                Extract the recipient, amount, and currency from the transaction message. 
+                Output a structured JSON object with 'to' for the recipient username, 'amount' for the amount, and 'currency' for the currency. 
+                Use 'USDC' for dollar amounts, otherwise use ETH.
+              `,
             },
             { role: "user", content: message },
           ],
-          functions: [
-            {
-              name: "extract_transaction_info",
-              description:
-                "Extracts recipient and currency information from a transaction message",
-              parameters: {
-                type: "object",
-                properties: {
-                  to: {
-                    type: "string",
-                    description: "The recipient of the transaction",
-                  },
-                  currency: {
-                    type: "string",
-                    description:
-                      "The currency of the transaction ('USDC' or 'ETH')",
-                  },
-                },
-                required: ["to", "currency"],
-              },
-            },
-          ],
-          function_call: { name: "extract_transaction_info" },
+          response_format: { type: "json_object" },
         });
 
-        const extractedInfo = JSON.parse(
-          response.choices[0].message.function_call.arguments,
-        );
-        return extractedInfo;
-      }),
+        const extractedInfo = response.choices[0].message.content;
+        return JSON.parse(extractedInfo!);
+      })
     );
 
-    // add to db
+    // Insert processed messages into the database
+    const { data: insertedData, error } = await supabase
+      .from("transaction")
+      .insert(processed_messages);
+
+    if (error) {
+      throw new Error(`Database insert error: ${error.message}`);
+    }
+
+    console.log("Inserted data:", insertedData);
   } catch (error) {
     console.error("Error:", error);
     return new Response(
       `Webhook error: ${error instanceof Error ? error.message : `Unknown error: ${error}`}`,
       {
         status: 400,
-      },
+      }
     );
   }
 
