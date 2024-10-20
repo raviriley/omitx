@@ -16,7 +16,7 @@ const END_TRIGGER_PHRASES = ["end transaction", "end transaction."];
 function extractTxMessages(
   text: string,
   startPhrases: string[],
-  endPhrases: string[]
+  endPhrases: string[],
 ): string[] {
   const startPattern = startPhrases.join("|");
   const endPattern = endPhrases.join("|");
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     const transaction_messages = extractTxMessages(
       transcript.toLowerCase(),
       START_TRIGGER_PHRASES,
-      END_TRIGGER_PHRASES
+      END_TRIGGER_PHRASES,
     );
 
     if (transaction_messages.length === 0) {
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
         await transactionResult.wait();
 
         return JSON.parse(extractedInfo);
-      })
+      }),
     );
 
     const { data: userData, error: userError } = await supabase
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
           to: msg.to,
           transcript: transcript,
           txid: null,
-        }))
+        })),
       );
 
     if (error) {
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
       `Webhook error: ${error instanceof Error ? error.message : `Unknown error: ${error}`}`,
       {
         status: 400,
-      }
+      },
     );
   }
 
