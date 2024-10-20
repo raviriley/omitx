@@ -1,12 +1,13 @@
-"use client";
+import { Wallet } from "@/providers/coinbase.provider";
+import { getServerSession } from "next-auth";
+import { authOptions } from "./api/auth/auth-options";
 
-import * as React from "react";
-import { useSession } from "next-auth/react";
-
-export default function LoginPage() {
-  const { data: session } = useSession();
+export default async function LoginPage() {
+  const session = await getServerSession(authOptions);
 
   if (session) {
+    const wallet = await Wallet.import(session.user?.wallet);
+    const balances = await wallet.listBalances();
     return (
       <div className="p-4">
         <h1>Welcome {session.user?.username}</h1>
@@ -15,6 +16,7 @@ export default function LoginPage() {
           Your Omi ID is {session.user?.omiId} and your db ID is{" "}
           {session.user?.id}
         </p>
+        <p>Your balances are {JSON.stringify(balances)}</p>
       </div>
     );
   }
