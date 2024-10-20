@@ -205,7 +205,7 @@ export default async function LoginPage() {
                               value={(
                                 await wallet.getDefaultAddress()
                               ).export()}
-                              toastMessage={`Copied ${chain} address to clipboard`}
+                              toastMessage={`Copied ${chain} private key to clipboard`}
                             />
                           </div>
                         </DialogContent>
